@@ -57,7 +57,8 @@ bool command_receive() {
     wait_time = millis();
     while ((esp_rx_packet[0] = ESP_SERIAL.read()) != 0x8F) if ((uint32_t)(millis() - wait_time) > 10UL) return false;
     // 残りのバイトを読み取る
-    for (uint8_t j = 1, wait_time = millis(); j < 5; j++) {
+    wait_time = millis();
+    for (uint8_t j = 1; j < 5; j++) {
       while (!ESP_SERIAL.available()) if ((uint32_t)(millis() - wait_time) > 3UL) return false;
       esp_rx_packet[j] = ESP_SERIAL.read();
       wait_time = millis();

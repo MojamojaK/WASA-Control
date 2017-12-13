@@ -269,7 +269,7 @@ bool servo_receive_data(uint8_t len) {
   // リターンパケットが来ても、以前受信に失敗した分かも知れないのでヘッダーが来るまで流す
   wait_time = millis();
   while ((servo_rx_packet[0] = SERVO_SERIAL.read()) != 0xFD) if (millis() - wait_time > 25UL) return false;
-  delayMicroseconds(1010);
+  delayMicroseconds(1050);
   // 残りのバイトを読み取る
   wait_time = millis();
   for (uint8_t i = 1; i < 8 + len; i++) {
@@ -328,6 +328,7 @@ void servo_pack_info(uint8_t id, uint8_t* packet) {
 void print_debug_info() {
   if (millis() - last_debug_time < DEBUG_COOLDOWN) return;
   for (uint8_t i = 0; i < servo_count; i++) {
+    if (i == 0)
     DEBUG_SERIAL.println(servo_info[i].alias + F("\t") + String(servo_info[i].control_value)
                           + F("\t") + String(servo_info[i].val)
                           + F("\t") + String(servo_info[i].actual_position) + "\t" + String(servo_info[i].load)
