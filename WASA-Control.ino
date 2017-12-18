@@ -5,6 +5,8 @@
 
 #define DEBUG_SERIAL Serial
 
+// tony test
+
 // 各サーボのID
 #define RUD_ID 1
 #define ELE_ID 2
@@ -70,5 +72,4 @@ void loop(){
   print_debug_info();
   servo_control_all();
   command_handle();
-  tonyBark();
 }
