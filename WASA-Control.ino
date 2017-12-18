@@ -72,7 +72,3 @@ void loop(){
   command_handle();
   tonyBark();
 }
-
-void tonyBark() {
-  Serial.println("Tony: \"わんわん\"");
-}
