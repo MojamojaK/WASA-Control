@@ -5,8 +5,6 @@
 
 #define DEBUG_SERIAL Serial
 
-// tony test
-
 // 各サーボのID
 #define RUD_ID 1
 #define ELE_ID 2

@@ -27,4 +27,3 @@ void sensory_transmit() {
     SENSORY_SERIAL.flush();
   }
 }
-

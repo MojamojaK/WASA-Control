@@ -208,7 +208,7 @@ void servo_maintain() {
       }
       servo_info[i].val = servo_info[i].val_threshold[sweep_angles[servo_info[i].sweep_next_step]];
       servo_move(servo_info[i].id, servo_info[i].val_threshold[sweep_angles[servo_info[i].sweep_next_step]], sweep_durations[servo_info[i].sweep_speed][servo_info[i].sweep_next_step]);
-      servo_info[i].sweep_last_step_time = millis(); 
+      servo_info[i].sweep_last_step_time = millis();
       DEBUG_SERIAL.print(F("Moved sweep ID: "));
       DEBUG_SERIAL.print(servo_info[i].id);
       DEBUG_SERIAL.print(F(" step: "));
@@ -337,4 +337,3 @@ void print_debug_info() {
   }
   last_debug_time = millis();
 }
-
