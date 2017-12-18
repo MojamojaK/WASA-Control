@@ -1,6 +1,6 @@
 /*
  * マルチSerialを利用しているため
- * ARDUINO MEGA のみで動作可能 
+ * ARDUINO MEGA のみで動作可能
  */
 
 #define DEBUG_SERIAL Serial
@@ -70,4 +70,9 @@ void loop(){
   print_debug_info();
   servo_control_all();
   command_handle();
+  tonyBark();
+}
+
+void tonyBark() {
+  Serial.println("Tony: \"わんわん\"");
 }
