@@ -3,7 +3,7 @@
  * ARDUINO MEGA のみで動作可能
  */
 
-#define DEBUG_SERIAL Serial
+#define DEBUG_SERIAL Serial // デバッグ用シリアル
 
 // 各サーボのID
 #define RUD_ID 1
@@ -43,18 +43,19 @@ int16_t ele_max = 500;      //エレベータ最大角       B111
 
 void setup(){
   DEBUG_SERIAL.begin(9600);
-  EEPROM.get(0x00, rud_min);
-  EEPROM.get(0x02, rud_neu);
-  EEPROM.get(0x04, rud_max);
-  EEPROM.get(0x06, ele_min);
-  EEPROM.get(0x08, ele_neu);
-  EEPROM.get(0x0A, ele_max);
+  EEPROM.get(0x00, rud_min); // ラダーの最小角をEEPROMから代入する　0x00,0x01
+  EEPROM.get(0x02, rud_neu); // ラダーのニュートラル角を代入する 0x02, 003
+  EEPROM.get(0x04, rud_max); // ラダーの最大角をEEPROMから代入する　0x04,0x05
+  EEPROM.get(0x06, ele_min); // エレベータの最小角をEEPROMから代入する　0x06,0x07
+  EEPROM.get(0x08, ele_neu); // エレベータのニュートラル角をEEPROMから代入する　0x08,0x09
+  EEPROM.get(0x0A, ele_max); // エレベータの最大角をEEPROMから代入する　0x0A,0x0B
   servo_add(RUD_ID, "RUDDER  ", RUD_CONT_PIN, RUD_CONT_L_MIN, RUD_CONT_C_MIN, RUD_CONT_C_MAX, RUD_CONT_H_MAX, rud_min, rud_neu, rud_max);
   servo_add(ELE_ID, "ELEVATOR", ELE_CONT_PIN, ELE_CONT_L_MIN, ELE_CONT_C_MIN, ELE_CONT_C_MAX, ELE_CONT_H_MAX, ele_min, ele_neu, ele_max);
   servo_setup();
   sensory_setup();
   command_setup();
   command_send_all();
+
 }
 
 void loop(){
