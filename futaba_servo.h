@@ -1,3 +1,5 @@
+#include <EEPROM.h>
+
 #define SERVO_SERIAL Serial2
 #define SERVO_BAUDRATE 9600
 
@@ -22,7 +24,7 @@ uint8_t servo_rx_packet[SERVO_COMM_MAX_BYTES] = {0}; //受信用パケット
 
 int16_t sweep_durations[2][SWEEP_STEPS] = {
   {0, 100, 250, 100, 500, 100, 250, 100}, // 低速試験動作　時間(10ms) 合計14秒以上
-  {0, 20, 100, 0, 200, 0, 100, 0}   // 高速試験動作　時間(10ms) 合計4.2秒以上
+  {0, 10, 50, 0, 100, 0, 50, 0}   // 高速試験動作　時間(10ms) 合計2.1秒以上
 };
 
 uint8_t sweep_angles[SWEEP_STEPS] = {
@@ -156,6 +158,10 @@ void servo_move(uint8_t id, uint16_t o_angle, uint16_t o_time) {
   transmit_packet(12);
 }
 
+void servo_angle_eeprom_set(uint8_t id, uint8_t type, int16_t val) {
+  EEPROM.put(id * 6 + type * 2, val);
+}
+
 uint8_t get_index(uint8_t id) {
   for (uint8_t i = 0; i < servo_count; i++) {
     if (servo_info[i].id == id) return i;
@@ -165,6 +171,14 @@ uint8_t get_index(uint8_t id) {
 
 bool servo_add(uint8_t id, String alias, int16_t controller_pin, int16_t l_min, int16_t c_min, int16_t c_max, int16_t h_max, int16_t val_min, int16_t val_neu, int16_t val_max) {
   if (servo_count >= SERVO_COUNT_MAX) return false;
+  if (val_min == val_neu) {
+    val_min--;
+    servo_angle_eeprom_set(id, MIN, val_min);
+  }
+  if (val_max == val_neu) {
+    val_max++;
+    servo_angle_eeprom_set(id, MAX, val_max);
+  }
   if (val_min < -1500 || val_min > 1500) return false;
   if (val_neu < -1500 || val_neu > 1500) return false;
   if (val_max < -1500 || val_max > 1500) return false;
@@ -191,8 +205,8 @@ void servo_maintain() {
       servo_reboot(servo_info[i].id);
       servo_set_torque_mode(servo_info[i].id, servo_info[i].torque_mode);
     }
-    if (servo_info[i].sweep_mode){
-      if (millis() - servo_info[i].sweep_begin_time > 12500){
+    if (servo_info[i].sweep_mode) {
+      if (millis() - servo_info[i].sweep_begin_time > 12500) {
         servo_info[i].sweep_mode = false;
         servo_info[i].sweep_next_step = 0;
         command_send_all();
@@ -200,7 +214,7 @@ void servo_maintain() {
       }
       if (millis() - servo_info[i].sweep_last_step_time < sweep_durations[servo_info[i].sweep_speed][servo_info[i].sweep_next_step] * 10) continue;
       servo_info[i].sweep_next_step++;
-      if (servo_info[i].sweep_next_step >= SWEEP_STEPS){
+      if (servo_info[i].sweep_next_step >= SWEEP_STEPS) {
         servo_info[i].sweep_mode = false;
         servo_info[i].sweep_next_step = 0;
         command_send_all();
@@ -249,11 +263,11 @@ void servo_request_data(uint8_t id, uint8_t address, uint8_t len) {
   servo_tx_packet[7] = checksum(servo_tx_packet, 7); //sum
 
   /*DEBUG_SERIAL.print("SENT: ");
-  for (uint8_t i = 0; i < 8; i++){
+    for (uint8_t i = 0; i < 8; i++){
     DEBUG_SERIAL.print(servo_tx_packet[i], HEX);
     DEBUG_SERIAL.print(' ');
-  }
-  DEBUG_SERIAL.println();*/
+    }
+    DEBUG_SERIAL.println();*/
   for (uint8_t i = 0; SERVO_SERIAL.available() && i < 255; i++) SERVO_SERIAL.read();
   transmit_packet(8);
 }
@@ -305,10 +319,10 @@ void servo_pack_info(uint8_t id, uint8_t* packet) {
     packet[12] = servo_rx_packet[24];   // present speed H
     packet[13] = servo_rx_packet[25];   // present load L
     packet[14] = servo_rx_packet[26];   // present load H
-    packet[11] = servo_rx_packet[27];   // present temperature L
-    packet[12] = servo_rx_packet[28];   // present temperature H
-    packet[13] = servo_rx_packet[29];   // present voltage L
-    packet[14] = servo_rx_packet[30];   // present voltage H
+    packet[15] = servo_rx_packet[27];   // present temperature L
+    packet[16] = servo_rx_packet[28];   // present temperature H
+    packet[17] = servo_rx_packet[29];   // present voltage L
+    packet[18] = servo_rx_packet[30];   // present voltage H
     servo_info[index].temp_limit          = (servo_rx_packet[3] & B10000000) >> 7;
     servo_info[index].temp_limit_alarm    = (servo_rx_packet[3] & B00100000) >> 5;
     servo_info[index].rom_write_error     = (servo_rx_packet[3] & B00001000) >> 3;
@@ -328,12 +342,12 @@ void servo_pack_info(uint8_t id, uint8_t* packet) {
 void print_debug_info() {
   if (millis() - last_debug_time < DEBUG_COOLDOWN) return;
   for (uint8_t i = 0; i < servo_count; i++) {
-    if (i == 0)
+    // if (i == 0)
     DEBUG_SERIAL.println(servo_info[i].alias + F("\t") + String(servo_info[i].control_value)
-                          + F("\t") + String(servo_info[i].val)
-                          + F("\t") + String(servo_info[i].actual_position) + "\t" + String(servo_info[i].load)
-                          + F("\t") + String(servo_info[i].temperature) + "\t" + String(servo_info[i].voltage)
-                          + F("\t") + String(servo_info[i].actual_torque_mode));
+                         + F("\t") + String(servo_info[i].val)
+                         + F("\t") + String(servo_info[i].actual_position) + "\t" + String(servo_info[i].load)
+                         + F("\t") + String(servo_info[i].temperature) + "\t" + String(servo_info[i].voltage)
+                         + F("\t") + String(servo_info[i].actual_torque_mode));
   }
   last_debug_time = millis();
 }

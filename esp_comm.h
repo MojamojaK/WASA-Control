@@ -1,4 +1,3 @@
-#include <EEPROM.h>
 #include "futaba_servo.h"
 
 #define CMD_LOG 0x00
@@ -389,7 +388,7 @@ void command_confirm() {
       DEBUG_SERIAL.print(F(" ==> "));
       DEBUG_SERIAL.println((int16_t)confirm_param[2]);
       servo_info[(uint8_t)confirm_param[0]].val_threshold[(uint8_t)confirm_param[1]] = (int16_t)confirm_param[2];
-      EEPROM.put((uint8_t)confirm_param[0] * 6 + (uint8_t)confirm_param[1] * 2, (int16_t)confirm_param[2]);
+      servo_angle_eeprom_set((uint8_t)confirm_param[0], (uint8_t)confirm_param[1], (int16_t)confirm_param[2]);
       break;
     case CMD_RBT:
       DEBUG_SERIAL.print(F("Executed Reboot Servo ID: "));

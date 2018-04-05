@@ -24,13 +24,13 @@
 // ELE_CONT_C_MIN ~ ELE_CONT_C_MAX: エレベータニュートラル
 // ELE_CONT_C_MAX ~ ELE_CONT_H_MAX: エレベータ上
 #define RUD_CONT_L_MIN 0
-#define RUD_CONT_C_MIN 440
-#define RUD_CONT_C_MAX 451
+#define RUD_CONT_C_MIN 555
+#define RUD_CONT_C_MAX 570
 #define RUD_CONT_H_MAX 1023
 
 #define ELE_CONT_L_MIN 0
-#define ELE_CONT_C_MIN 475
-#define ELE_CONT_C_MAX 485
+#define ELE_CONT_C_MIN 520
+#define ELE_CONT_C_MAX 540
 #define ELE_CONT_H_MAX 1023
 
 // 各サーボ角の最小値、最大値、ニュートラル   単位は0.1°

@@ -14,16 +14,17 @@ void sensory_setup() {
 }
 
 uint8_t *sensory_packet(uint8_t id) {
-  return sensory_tx_packet + 3 + (id - 1) * 15;
+  return sensory_tx_packet + 3 + (id - 1) * 19;
 }
 
 void sensory_transmit() {
   if ((uint32_t)(millis() - last_time) > cooldown) {
     sensory_tx_packet[0] = 0x7C;
     sensory_tx_packet[1] = 0xC7;
-    sensory_tx_packet[2] = 30;
-    sensory_tx_packet[33] = checksum(sensory_tx_packet, 33);
-    SENSORY_SERIAL.write(sensory_tx_packet, 34);
+    sensory_tx_packet[2] = 38;
+    sensory_tx_packet[41] = checksum(sensory_tx_packet, 41);
+    SENSORY_SERIAL.write(sensory_tx_packet, 42);
     SENSORY_SERIAL.flush();
+    last_time = millis();
   }
 }
