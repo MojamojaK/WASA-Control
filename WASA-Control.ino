@@ -1,7 +1,7 @@
 /*
- * マルチSerialを利用しているため
- * ARDUINO MEGA のみで動作可能
- */
+   マルチSerialを利用しているため
+   ARDUINO MEGA のみで動作可能
+*/
 
 #define DEBUG_SERIAL Serial // デバッグ用シリアル
 
@@ -11,6 +11,7 @@
 
 #include "esp_comm.h" // EEPROM.h と futaba_servo.h がインクルードされる
 #include "sensory.h"
+#include "tone.h"
 
 // 操縦桿アナログ信号ピン
 #define RUD_CONT_PIN A0
@@ -24,13 +25,13 @@
 // ELE_CONT_C_MIN ~ ELE_CONT_C_MAX: エレベータニュートラル
 // ELE_CONT_C_MAX ~ ELE_CONT_H_MAX: エレベータ上
 #define RUD_CONT_L_MIN 0
-#define RUD_CONT_C_MIN 555
-#define RUD_CONT_C_MAX 570
+#define RUD_CONT_C_MIN 550 // 本番操縦桿: 550 予備操縦桿: 520
+#define RUD_CONT_C_MAX 570 // 本番操縦桿: 570 予備操縦桿: 535
 #define RUD_CONT_H_MAX 1023
 
 #define ELE_CONT_L_MIN 0
-#define ELE_CONT_C_MIN 520
-#define ELE_CONT_C_MAX 540
+#define ELE_CONT_C_MIN 520 // 本番操縦桿: 520 予備操縦桿: 520
+#define ELE_CONT_C_MAX 540 // 本番操縦桿: 540 予備操縦桿: 532
 #define ELE_CONT_H_MAX 1023
 
 // 各サーボ角の最小値、最大値、ニュートラル   単位は0.1°
@@ -41,7 +42,7 @@ int16_t ele_min = -500;     //エレベータ最大角       B101
 int16_t ele_neu = 0;        //エレベータ最大角       B110
 int16_t ele_max = 500;      //エレベータ最大角       B111
 
-void setup(){
+void setup() {
   DEBUG_SERIAL.begin(9600);
   EEPROM.get(0x00, rud_min); // ラダーの最小角をEEPROMから代入する　0x00,0x01
   EEPROM.get(0x02, rud_neu); // ラダーのニュートラル角を代入する 0x02, 003
@@ -49,16 +50,17 @@ void setup(){
   EEPROM.get(0x06, ele_min); // エレベータの最小角をEEPROMから代入する　0x06,0x07
   EEPROM.get(0x08, ele_neu); // エレベータのニュートラル角をEEPROMから代入する　0x08,0x09
   EEPROM.get(0x0A, ele_max); // エレベータの最大角をEEPROMから代入する　0x0A,0x0B
-  servo_add(RUD_ID, "RUDDER  ", RUD_CONT_PIN, RUD_CONT_L_MIN, RUD_CONT_C_MIN, RUD_CONT_C_MAX, RUD_CONT_H_MAX, rud_min, rud_neu, rud_max);
-  servo_add(ELE_ID, "ELEVATOR", ELE_CONT_PIN, ELE_CONT_L_MIN, ELE_CONT_C_MIN, ELE_CONT_C_MAX, ELE_CONT_H_MAX, ele_min, ele_neu, ele_max);
+  servo_add(RUD_ID, "RUDDER  ", RUD_CONT_PIN, RUD_CONT_L_MIN, RUD_CONT_C_MIN, RUD_CONT_C_MAX, RUD_CONT_H_MAX, rud_min, rud_neu, rud_max, true);
+  servo_add(ELE_ID, "ELEVATOR", ELE_CONT_PIN, ELE_CONT_L_MIN, ELE_CONT_C_MIN, ELE_CONT_C_MAX, ELE_CONT_H_MAX, ele_min, ele_neu, ele_max, true);
   servo_setup();
   sensory_setup();
   command_setup();
   command_send_all();
-
+  initTone();
+  tonePlayLevelUp();
 }
 
-void loop(){
+void loop() {
   servo_control_all();
   servo_pack_info(RUD_ID, sensory_packet(RUD_ID));
   servo_control_all();

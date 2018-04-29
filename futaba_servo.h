@@ -46,6 +46,11 @@ typedef struct ServoInfo {
   int16_t val = 0;
   int16_t val_threshold[3] = { -50, 0, 50};
 
+
+  boolean reverse = false; // false -> 通常, true -> ジョイスティックの読みを反転させる
+  uint8_t adjusted_max = (uint8_t)MAX; // reverse = false -> MAX, reverse = true -> MIN
+  uint8_t adjusted_min = (uint8_t)MIN; // reverse = false -> MIN, reverse = true -> MAX
+
   boolean test_mode = false;
   boolean sweep_mode = false;
 
@@ -169,7 +174,7 @@ uint8_t get_index(uint8_t id) {
   return 0xFF;
 }
 
-bool servo_add(uint8_t id, String alias, int16_t controller_pin, int16_t l_min, int16_t c_min, int16_t c_max, int16_t h_max, int16_t val_min, int16_t val_neu, int16_t val_max) {
+bool servo_add(uint8_t id, String alias, int16_t controller_pin, int16_t l_min, int16_t c_min, int16_t c_max, int16_t h_max, int16_t val_min, int16_t val_neu, int16_t val_max, bool reverse) {
   if (servo_count >= SERVO_COUNT_MAX) return false;
   if (val_min == val_neu) {
     val_min--;
@@ -186,12 +191,20 @@ bool servo_add(uint8_t id, String alias, int16_t controller_pin, int16_t l_min, 
   servo_info[servo_count].alias = alias;
   servo_info[servo_count].controller_pin = controller_pin;
   servo_info[servo_count].l_min = l_min;
+  servo_info[servo_count].h_max = h_max;
   servo_info[servo_count].c_min = c_min;
   servo_info[servo_count].c_max = c_max;
-  servo_info[servo_count].h_max = h_max;
   servo_info[servo_count].val_threshold[MIN] = val_min;
   servo_info[servo_count].val_threshold[NEU] = val_neu;
   servo_info[servo_count].val_threshold[MAX] = val_max;
+  servo_info[servo_count].reverse = reverse;
+  if (!servo_info[servo_count].reverse) {
+    servo_info[servo_count].adjusted_min = MIN;
+    servo_info[servo_count].adjusted_max = MAX;
+  } else {
+    servo_info[servo_count].adjusted_min = MAX;
+    servo_info[servo_count].adjusted_max = MIN;
+  }
   servo_count++;
   pinMode(controller_pin, INPUT);
   return true;
@@ -245,8 +258,8 @@ void servo_control_all() {
   for (uint8_t i = 0; i < servo_count; i++) {
     if (servo_info[i].test_mode || servo_info[i].sweep_mode) continue;
     servo_info[i].control_value = analogRead(servo_info[i].controller_pin);
-    if (servo_info[i].control_value < servo_info[i].c_min)      servo_info[i].val = map(servo_info[i].control_value, servo_info[i].l_min, servo_info[i].c_min, servo_info[i].val_threshold[MIN], servo_info[i].val_threshold[NEU]);
-    else if (servo_info[i].control_value > servo_info[i].c_max) servo_info[i].val = map(servo_info[i].control_value, servo_info[i].c_max, servo_info[i].h_max, servo_info[i].val_threshold[NEU], servo_info[i].val_threshold[MAX]);
+    if (servo_info[i].control_value < servo_info[i].c_min)      servo_info[i].val = map(servo_info[i].control_value, servo_info[i].l_min, servo_info[i].c_min, servo_info[i].val_threshold[servo_info[i].adjusted_min], servo_info[i].val_threshold[NEU]);
+    else if (servo_info[i].control_value > servo_info[i].c_max) servo_info[i].val = map(servo_info[i].control_value, servo_info[i].c_max, servo_info[i].h_max, servo_info[i].val_threshold[NEU], servo_info[i].val_threshold[servo_info[i].adjusted_max]);
     else                                                        servo_info[i].val = servo_info[i].val_threshold[NEU];
     servo_move(servo_info[i].id, servo_info[i].val, 20);
   }
@@ -342,7 +355,7 @@ void servo_pack_info(uint8_t id, uint8_t* packet) {
 void print_debug_info() {
   if (millis() - last_debug_time < DEBUG_COOLDOWN) return;
   for (uint8_t i = 0; i < servo_count; i++) {
-    // if (i == 0)
+    //if (i == 0)
     DEBUG_SERIAL.println(servo_info[i].alias + F("\t") + String(servo_info[i].control_value)
                          + F("\t") + String(servo_info[i].val)
                          + F("\t") + String(servo_info[i].actual_position) + "\t" + String(servo_info[i].load)
