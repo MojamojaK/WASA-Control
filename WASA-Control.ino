@@ -11,7 +11,6 @@
 
 #include "esp_comm.h" // EEPROM.h と futaba_servo.h がインクルードされる
 #include "sensory.h"
-#include "tone.h"
 
 // 操縦桿アナログ信号ピン
 #define RUD_CONT_PIN A0
@@ -50,7 +49,7 @@ void setup() {
   EEPROM.get(0x06, ele_min); // エレベータの最小角をEEPROMから代入する　0x06,0x07
   EEPROM.get(0x08, ele_neu); // エレベータのニュートラル角をEEPROMから代入する　0x08,0x09
   EEPROM.get(0x0A, ele_max); // エレベータの最大角をEEPROMから代入する　0x0A,0x0B
-  servo_add(RUD_ID, "RUDDER  ", RUD_CONT_PIN, RUD_CONT_L_MIN, RUD_CONT_C_MIN, RUD_CONT_C_MAX, RUD_CONT_H_MAX, rud_min, rud_neu, rud_max, true);
+  servo_add(RUD_ID, "RUDDER  ", RUD_CONT_PIN, RUD_CONT_L_MIN, RUD_CONT_C_MIN, RUD_CONT_C_MAX, RUD_CONT_H_MAX, rud_min, rud_neu, rud_max, false);
   servo_add(ELE_ID, "ELEVATOR", ELE_CONT_PIN, ELE_CONT_L_MIN, ELE_CONT_C_MIN, ELE_CONT_C_MAX, ELE_CONT_H_MAX, ele_min, ele_neu, ele_max, true);
   servo_setup();
   sensory_setup();
@@ -73,4 +72,5 @@ void loop() {
   print_debug_info();
   servo_control_all();
   command_handle();
+  handleTone();
 }

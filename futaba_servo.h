@@ -1,3 +1,4 @@
+#include "tone.h"
 #include <EEPROM.h>
 
 #define SERVO_SERIAL Serial2
@@ -349,6 +350,7 @@ void servo_pack_info(uint8_t id, uint8_t* packet) {
   }
   else {
     servo_info[index].actual_torque_mode = 0;
+    playAlert();
   }
 }
 
